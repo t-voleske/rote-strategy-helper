@@ -14,20 +14,19 @@ public class SimulationController {
     int maxRunsPerPhase = 50000;
     private ExecutorService executor;
     private int numThreads;
-    ArrayList<MapState> mapStateCollection = new ArrayList<>();
 
     public SimulationController(GuildData inputGuild) {
         this.currenGuildData = inputGuild;
     }
 
-    public ArrayList<TbRun> executeSimulation() {
+    public ArrayList<TbRun> executeSimulation(int runsToReturn) {
 
         numThreads = Runtime.getRuntime().availableProcessors();
         this.executor = Executors.newFixedThreadPool(numThreads);
         runResults = runFullSimulation(this.currenGuildData);
         System.out.print("\n");
         System.out.print(runResults.size());
-        outputTopXRuns(runResults, 10);
+        outputTopXRuns(runResults, runsToReturn);
 
         executor.shutdown();
         return runResults;
@@ -41,7 +40,10 @@ public class SimulationController {
         ArrayList<TbRun> toProcess = new ArrayList<>(simulation.toDo);
 
         for (int i = 1; i < 6; i++) {
-            System.out.println("Phase " + i);
+            // System.out.println("\n========== STARTING PHASE " + i + " ==========");
+            // System.out.println("Processing " + toProcess.size() + " runs from previous
+            // phase");
+
             final int phaseIndex = i;
             phaseContainer[i] = new PhaseSimulation();
 
@@ -69,9 +71,14 @@ public class SimulationController {
             }
 
             toProcess = phaseContainer[i].toDo;
+
             toProcess.sort(Comparator.comparingInt((TbRun run) -> run.updateCurrentStars()).reversed());
 
             if (toProcess.size() > maxRunsPerPhase) {
+                // System.out.println("PRUNING: Cutting from " + toProcess.size() + " to " +
+                // maxRunsPerPhase);
+                // int cutoffStars = toProcess.get(maxRunsPerPhase - 1).updateCurrentStars();
+                // System.out.println("Cutoff is at " + cutoffStars + " stars");
                 toProcess.subList(maxRunsPerPhase, toProcess.size()).clear();
             }
 
@@ -83,9 +90,9 @@ public class SimulationController {
         return phaseContainer[5].result;
     }
 
-    public final void outputTopXRuns(ArrayList<TbRun> inputArrayList, int x) {
+    public final void outputTopXRuns(ArrayList<TbRun> inputArrayList, int outputCountX) {
         inputArrayList.sort(Comparator.comparingInt((TbRun run) -> run.updateCurrentStars()).reversed());
-        inputArrayList.subList(x, inputArrayList.size()).clear();
+        inputArrayList.subList(outputCountX, inputArrayList.size()).clear();
         for (int i = 0; i < inputArrayList.size(); i++) {
             System.out.println("\n==================================================");
             System.out.println("Top " + (i + 1) + " - " + inputArrayList.get(i).starCounter + " :");
@@ -98,10 +105,10 @@ public class SimulationController {
         }
     }
 
-    public final String outputTopXRunString(ArrayList<TbRun> inputArrayList, int x) {
+    public final String outputTopXRunString(ArrayList<TbRun> inputArrayList, int outputCountX) {
         StringBuilder output = new StringBuilder();
         inputArrayList.sort(Comparator.comparingInt((TbRun run) -> run.updateCurrentStars()).reversed());
-        inputArrayList.subList(x, inputArrayList.size()).clear();
+        inputArrayList.subList(outputCountX, inputArrayList.size()).clear();
         for (int i = 0; i < inputArrayList.size(); i++) {
             output.append("\n==================================================");
             output.append("Top " + (i + 1) + " - " + inputArrayList.get(i).starCounter + " :");

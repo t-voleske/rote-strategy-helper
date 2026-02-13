@@ -149,6 +149,10 @@ public class MapState {
     public void advanceMixed() {
         if (currentMiDepth < mixed.size() - 1) {
             mixed.get(currentMiDepth).isActive = false;
+            if (currentLsDepth == 1 && currentGuild.mandaloreReady) {
+                unlockMandalore();
+                advanceMandalore();
+            }
             currentMiDepth++;
             mixed.get(currentMiDepth).isActive = true;
         }
@@ -157,6 +161,10 @@ public class MapState {
     public void advanceLightSide() {
         if (currentLsDepth < lightSide.size() - 1) {
             lightSide.get(currentLsDepth).isActive = false;
+            if (currentLsDepth == 1 && currentGuild.zeffoReady) {
+                unlockZeffo();
+                advanceZeffo();
+            }
             currentLsDepth++;
             lightSide.get(currentLsDepth).isActive = true;
         }
@@ -167,11 +175,18 @@ public class MapState {
     }
 
     public void advanceMandalore() {
-        if (mandaloreUnlocked && !mandalore.get(0).isActive) {
+        if (mandaloreUnlocked && !mandalore.get(0).isActive && mandalore.get(0).getCurrentStar() < 1) {
+            System.out.println("Mandalore unlocked and set to active");
+            System.out.println("Mandalore current star: " + mandalore.get(0).getStarResult());
             mandalore.get(0).isActive = true;
+        } else if (mandaloreUnlocked && mandalore.get(0).isActive && mandalore.get(0).getCurrentStar() < 1) {
             return;
+
+        } else {
+            mandalore.get(0).isActive = false; // set mandalore inactive, as it has been completed
+            mandaloreUnlocked = false; // set mandalore as locked again, as it can only be done once
         }
-        mandalore.get(0).isActive = false; // set mandalore inactive, as it has been completed
+
     }
 
     public void unlockZeffo() {
@@ -179,11 +194,19 @@ public class MapState {
     }
 
     public void advanceZeffo() {
-        if (zeffoUnlocked && !zeffo.get(0).isActive) {
+        if (zeffoUnlocked && !zeffo.get(0).isActive && zeffo.get(0).getCurrentStar() < 1) {
+            System.out.println("Zeffo unlocked and set to active");
+            System.out.println("Zeffo current star: " + zeffo.get(0).getCurrentStar());
             zeffo.get(0).isActive = true;
+        } else if (zeffoUnlocked && zeffo.get(0).isActive && zeffo.get(0).getCurrentStar() < 1) {
+
             return;
+
+        } else {
+            zeffo.get(0).isActive = false; // set zeffo inactive, as it has been completed
+            zeffoUnlocked = false; // set zeffo as locked again, as it can only be done once
         }
-        zeffo.get(0).isActive = false; // set zeffo inactive, as it has been completed
+
     }
 
     public void advancePhase(double newBudget) {
@@ -270,7 +293,7 @@ public class MapState {
         Planet[] activePlanets = getCurrentActivePlanets();
         for (Planet p : activePlanets) {
             if (p != null) {
-                info.append(p.name).append(" ").append(p.getCurrentStar()).append(" ").append(p.getCurrentPoints())
+                info.append(p.name).append(" ").append(p.getStarResult()).append(" ").append(p.getCurrentPoints())
                         .append("\n");
             }
         }

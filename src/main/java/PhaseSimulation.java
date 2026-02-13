@@ -100,6 +100,41 @@ public class PhaseSimulation {
         return tmpRun;
     }
 
+    public static TbRun prepareTbRun(TbRun runToAdvance, int targetPhase) {
+
+        // Get all the relevant objects
+        TbRun tmpRun = runToAdvance.cloneRun();
+        MapState tmpState = tmpRun.roteRun[targetPhase - 2].cloneMapState();
+        Planet[] workingPlanets = tmpState.getCurrentActivePlanets();
+        if (workingPlanets[0] != null && workingPlanets[0].getCurrentStar() > 0) {
+
+            tmpState.advanceDarkSide();
+        }
+        if (workingPlanets[1] != null && workingPlanets[1].getCurrentStar() > 0) {
+
+            tmpState.advanceMixed();
+        }
+        if (workingPlanets[2] != null && workingPlanets[2].getCurrentStar() > 0) {
+
+            tmpState.advanceLightSide();
+        }
+        if (tmpState.mandaloreUnlocked || tmpState.mandalore.get(0).isActive
+                && tmpState.mandalore.get(0).getCurrentStar() > 0) {
+            tmpState.advanceMandalore();
+        }
+        if (tmpState.zeffoUnlocked || tmpState.zeffo.get(0).isActive
+                && tmpState.zeffo.get(0).getCurrentStar() > 0) {
+            tmpState.advanceZeffo();
+        }
+
+        tmpState.advancePhase(tmpRun.currentGuild.assumedGpBudget);
+        if (targetPhase <= 6) {
+            tmpRun.roteRun[targetPhase - 1] = tmpState;
+        }
+        tmpRun.currentPhase = targetPhase;
+        return tmpRun;
+    }
+
     // Simulate adding mission points to all active planets
     public TbRun addMissionPoints(TbRun missionRun) {
         Planet[] workingPlanets = missionRun.roteRun[missionRun.currentPhase - 1].getCurrentActivePlanets();
@@ -167,14 +202,13 @@ public class PhaseSimulation {
 
         PlanningActions planner = new PlanningActions();
         // Get list of possible phase outcomes
-        List<PlanningActions.starCombinationRecord> allOutcomes = planner.tryPossibleMapStates(workingState,
-                workingState.phaseGpBudget, workingPhase);
 
-        // Reduce allOutcomes to relevant subset prunedOutcomes
-        List<PlanningActions.starCombinationRecord> prunedOutcomes = planner.pruneStarCombinations(allOutcomes);
+        List<PlanningActions.starCombinationRecord> allOutcomes = planner
+                .buildOptimalStarCombinations(workingState.getCurrentActivePlanets(), workingState.phaseGpBudget,
+                        workingState.currentPhase);
 
         // Build TbRun object for each item in prunedOutcomes
-        for (PlanningActions.starCombinationRecord rec : prunedOutcomes) {
+        for (PlanningActions.starCombinationRecord rec : allOutcomes) {
             TbRun workingRun = branchRun.cloneRun();
             // This is already built on a cloned MapState object
             MapState outcomeState = planner.buildMapStateFromCombination(rec, workingState);

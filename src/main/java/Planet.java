@@ -27,11 +27,11 @@ public class Planet {
         this.name = name;
         this.depth = depth;
         this.position = position;
-        this.neededPointsFull = round(neededPointsFull);
-        this.neededPoints2Star = round(neededPoints2Star);
-        this.neededPoints1Star = round(neededPoints1Star);
-        this.fullPreloadPoints = round(neededPoints1Star) - 5; // default preload points is 5 million less than needed
-                                                               // for 1 star
+        this.neededPointsFull = neededPointsFull;
+        this.neededPoints2Star = neededPoints2Star;
+        this.neededPoints1Star = neededPoints1Star;
+        this.fullPreloadPoints = neededPoints1Star - 5; // default preload points is 5 million less than needed
+                                                        // for 1 star
         this.isActive = false;
         this.isCompleted = false;
         this.currentPoints = 0;
@@ -108,7 +108,7 @@ public class Planet {
         }
     }
 
-    public double neededForNextStar(Planet p) {
+    public double neededForNextStar() {
         if (this.currentPoints < this.neededPoints1Star) {
             return round(this.neededPoints1Star - this.currentPoints);
         } else if (this.currentPoints < this.neededPoints2Star) {
@@ -134,6 +134,40 @@ public class Planet {
         }
     }
 
+    public int getCurrentWorth() {
+        if (this.currentPoints >= this.neededPointsFull) {
+            return 3;
+        } else if (this.currentPoints >= this.neededPoints2Star) {
+            return 2;
+        } else if (this.currentPoints >= this.neededPoints1Star) {
+            return 1;
+        } else if (this.currentPoints >= this.fullPreloadPoints) {
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+
+    public int getStarResult() {
+        if (this.currentPoints >= this.neededPointsFull && !this.name.equals("Mandalore")
+                && !this.name.equals("Zeffo")) {
+            return 3;
+        } else if (this.currentPoints >= this.neededPoints2Star && !this.name.equals("Mandalore")
+                && !this.name.equals("Zeffo")) {
+            return 2;
+        } else if (this.currentPoints >= this.neededPoints1Star
+                || (this.name.equals("Mandalore") && this.currentPoints >= this.neededPointsFull)
+                || (this.name.equals("Zeffo") && this.currentPoints >= this.neededPointsFull)) {
+            return 1;
+        } else if (this.currentPoints >= this.fullPreloadPoints
+                || (this.name.equals("Mandalore") && this.currentPoints < this.neededPointsFull)
+                || (this.name.equals("Zeffo") && this.currentPoints < this.neededPointsFull)) {
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+
     public String getBasicInfoString() {
         return "Planet: " + this.name + ", Depth: " + this.depth + ", Position: " + this.position;
     }
@@ -144,6 +178,9 @@ public class Planet {
 
     public double addPoints(double pointsToAdd) {
         this.currentPoints = round(pointsToAdd + this.currentPoints);
+        if (this.currentPoints > this.neededPointsFull) {
+            this.currentPoints = this.neededPointsFull;
+        }
         return this.currentPoints;
     }
 
