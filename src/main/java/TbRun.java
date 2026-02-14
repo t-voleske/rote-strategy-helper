@@ -84,10 +84,11 @@ public class TbRun {
     public String getResultString(int runIndex) {
         StringBuilder output = new StringBuilder();
         output.append("\n").append("==============================");
-        output.append("\n").append("Top " + (runIndex + 1) + " - " + this.starCounter + " Stars :");
+        output.append("\n").append("Top ").append((runIndex + 1)).append(" - ").append(this.starCounter)
+                .append(" Stars :");
         output.append("\n").append("==============================");
         for (MapState m : this.roteRun) {
-            output.append("\n").append("- Phase " + m.currentPhase + " -").append("\n");
+            output.append("\n").append("- Phase ").append(m.currentPhase).append(" -").append("\n");
             for (String line : m.getMapStatusString().split("\n")) {
                 output.append(line).append("\n");
             }

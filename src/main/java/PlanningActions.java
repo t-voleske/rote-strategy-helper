@@ -580,13 +580,11 @@ public final class PlanningActions {
                         }
                     }
                     if (closestIndex == -1) {
-                        availablePoints = 0; // No more planets to preload
+                        // availablePoints = 0; // No more planets to preload
                         break;
                     } else if (closestToPreload > 0 && closestToPreload < Double.MAX_VALUE) {
                         activePlanets[closestIndex].addPoints(closestToPreload);
                         availablePoints -= closestToPreload;
-                        closestToPreload = Double.MAX_VALUE; // Reset for next iteration
-                        closestIndex = -1; // Reset for next iteration
                     }
 
                 }
@@ -605,7 +603,7 @@ public final class PlanningActions {
                         }
                     }
                     if (closestStarIndex == -1) {
-                        availablePoints = 0;
+                        // availablePoints = 0;
                         break;
                     } else if (closestToNextStar > 0 && closestToNextStar < Double.MAX_VALUE) {
                         activePlanets[closestStarIndex].addPoints(closestToNextStar);

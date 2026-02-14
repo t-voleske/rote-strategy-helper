@@ -179,13 +179,16 @@ public class MapState {
             System.out.println("Mandalore unlocked and set to active");
             System.out.println("Mandalore current star: " + mandalore.get(0).getStarResult());
             mandalore.get(0).isActive = true;
-        } else if (mandaloreUnlocked && mandalore.get(0).isActive && mandalore.get(0).getCurrentStar() < 1) {
-            return;
-
-        } else {
+        } else if (!(mandaloreUnlocked && mandalore.get(0).isActive && mandalore.get(0).getCurrentStar() < 1)) {
             mandalore.get(0).isActive = false; // set mandalore inactive, as it has been completed
             mandaloreUnlocked = false; // set mandalore as locked again, as it can only be done once
-        }
+
+        } // else {
+          // mandalore.get(0).isActive = false; // set mandalore inactive, as it has been
+          // completed
+          // mandaloreUnlocked = false; // set mandalore as locked again, as it can only
+          // be done once
+          // }
 
     }
 
@@ -198,14 +201,15 @@ public class MapState {
             System.out.println("Zeffo unlocked and set to active");
             System.out.println("Zeffo current star: " + zeffo.get(0).getCurrentStar());
             zeffo.get(0).isActive = true;
-        } else if (zeffoUnlocked && zeffo.get(0).isActive && zeffo.get(0).getCurrentStar() < 1) {
-
-            return;
-
-        } else {
+        } else if (!(zeffoUnlocked && zeffo.get(0).isActive && zeffo.get(0).getCurrentStar() < 1)) {
             zeffo.get(0).isActive = false; // set zeffo inactive, as it has been completed
             zeffoUnlocked = false; // set zeffo as locked again, as it can only be done once
-        }
+        } // else {
+          // zeffo.get(0).isActive = false; // set zeffo inactive, as it has been
+          // completed
+          // zeffoUnlocked = false; // set zeffo as locked again, as it can only be done
+          // once
+          // }
 
     }
 
@@ -356,6 +360,19 @@ public class MapState {
         }
 
         return result;
+    }
+
+    public int[] getCurrentCheckpoints() {
+        int[] checkpoints = new int[5];
+        Planet[] activePlanets = getCurrentActivePlanets();
+        for (int i = 0; i < activePlanets.length; i++) {
+            if (activePlanets[i] != null) {
+                checkpoints[i] = activePlanets[i].getCurrentStar();
+            } else {
+                checkpoints[i] = -9; // indicate no active planet in the slot
+            }
+        }
+        return checkpoints;
     }
 
 }

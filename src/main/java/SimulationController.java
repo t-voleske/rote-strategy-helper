@@ -111,10 +111,10 @@ public class SimulationController {
         inputArrayList.subList(outputCountX, inputArrayList.size()).clear();
         for (int i = 0; i < inputArrayList.size(); i++) {
             output.append("\n==================================================");
-            output.append("Top " + (i + 1) + " - " + inputArrayList.get(i).starCounter + " :");
+            output.append("Top ").append((i + 1)).append(" - ").append(inputArrayList.get(i).starCounter).append(" :");
             output.append("==================================================");
             for (MapState m : inputArrayList.get(i).roteRun) {
-                output.append("- Phase " + m.currentPhase + "\n");
+                output.append("- Phase ").append(m.currentPhase).append("\n");
                 output.append(m.getMapStatusString());
                 output.append("----------------------");
             }

@@ -38,7 +38,7 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
-public class StrategyCalculator extends JFrame {
+public class StrategyHelper extends JFrame {
     private JTextField guildNameField;
     private JTextField totalGuildPointsField;
     private JSpinner activeGuildMembersSpinner;
@@ -52,10 +52,10 @@ public class StrategyCalculator extends JFrame {
     private JButton loadGuildButton;
     private JPanel loadButtonPanel;
 
-    private CardLayout cardLayout;
-    private JPanel cardPanel;
-    private JPanel dataEntryPanel;
-    private JPanel resultsPanel;
+    private final CardLayout cardLayout;
+    private final JPanel cardPanel;
+    private final JPanel dataEntryPanel;
+    private final JPanel resultsPanel;
 
     private JTextPane resultTextArea;
     private JLabel resultIndexLabel;
@@ -88,11 +88,13 @@ public class StrategyCalculator extends JFrame {
     private static final String DATA_ENTRY_VIEW = "dataEntry";
     private static final String RESULTS_VIEW = "results";
 
-    private static final String NUMBER_FORMAT_ERROR_MESSAGE = "Invalid number format.\n\n"
-            + "Please use a dot (.) as the decimal separator instead of a comma.\n"
-            + "For example: 300.5 instead of 300,5";
+    private static final String NUMBER_FORMAT_ERROR_MESSAGE = """
+            Invalid number format.
 
-    public StrategyCalculator() {
+            Please use a dot (.) as the decimal separator instead of a comma.
+            For example: 300.5 instead of 300,5""";
+
+    public StrategyHelper() {
         setTitle("Guild Calculator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setPreferredSize(new Dimension(550, 900));
@@ -681,12 +683,12 @@ public class StrategyCalculator extends JFrame {
                     Throwable cause = ex.getCause();
                     if (cause instanceof IllegalArgumentException) {
                         statusLabel.setText("Calculation failed.");
-                        JOptionPane.showMessageDialog(StrategyCalculator.this,
+                        JOptionPane.showMessageDialog(StrategyHelper.this,
                                 "No result could be calculated. Total Guild Points or Assumed GP Efficiency might be too low.",
                                 "Calculation Error", JOptionPane.ERROR_MESSAGE);
                     } else {
                         statusLabel.setText("Error: " + ex.getMessage());
-                        JOptionPane.showMessageDialog(StrategyCalculator.this,
+                        JOptionPane.showMessageDialog(StrategyHelper.this,
                                 "Simulation error: " + ex.getMessage(),
                                 "Error", JOptionPane.ERROR_MESSAGE);
                     }
@@ -743,7 +745,7 @@ public class StrategyCalculator extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            StrategyCalculator frame = new StrategyCalculator();
+            StrategyHelper frame = new StrategyHelper();
             frame.setVisible(true);
         });
     }

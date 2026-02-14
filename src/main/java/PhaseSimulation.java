@@ -100,7 +100,7 @@ public class PhaseSimulation {
         return tmpRun;
     }
 
-    public static TbRun prepareTbRun(TbRun runToAdvance, int targetPhase) {
+    public TbRun prepareTbRun(TbRun runToAdvance, int targetPhase) {
 
         // Get all the relevant objects
         TbRun tmpRun = runToAdvance.cloneRun();
@@ -186,22 +186,12 @@ public class PhaseSimulation {
         ArrayList<TbRun> resultsList = new ArrayList<>();
         ArrayList<TbRun> toDoList = new ArrayList<>();
 
-        if (branchRun.currentPhase == 1) {
-            System.out.println("------------------------------------------------");
-            System.out.println("\n");
-            System.out.println("------------------------------------------------");
-            System.out.println("New run simulation started.");
-            branchRun.evaluateActivePlanets(branchRun.roteRun[branchRun.currentPhase - 1]);
-        }
         // prepare run to be branched
         phasePreparation(branchRun);
         int workingPhase = branchRun.currentPhase;
         MapState workingState = branchRun.roteRun[workingPhase - 1];
-        // System.out.println("\n");
-        // branchRun.evaluateActivePlanets(workingState);
 
         PlanningActions planner = new PlanningActions();
-        // Get list of possible phase outcomes
 
         List<PlanningActions.starCombinationRecord> allOutcomes = planner
                 .buildOptimalStarCombinations(workingState.getCurrentActivePlanets(), workingState.phaseGpBudget,
@@ -210,17 +200,13 @@ public class PhaseSimulation {
         // Build TbRun object for each item in prunedOutcomes
         for (PlanningActions.starCombinationRecord rec : allOutcomes) {
             TbRun workingRun = branchRun.cloneRun();
-            // This is already built on a cloned MapState object
+
             MapState outcomeState = planner.buildMapStateFromCombination(rec, workingState);
             outcomeState = internMapState(outcomeState);
             workingRun.roteRun[workingPhase - 1] = outcomeState;
             resultsList.add(workingRun);
             TbRun nextPhaseRun = workingRun.cloneRun();
             nextPhaseRun = advancePhase(nextPhaseRun);
-            // System.out.println("After Advance");
-            // for (MapState m : nextPhaseRun.roteRun) {
-            // System.out.println(m);
-            // }
 
             toDoList.add(nextPhaseRun);
         }
@@ -229,26 +215,6 @@ public class PhaseSimulation {
         }
 
         this.toDo.addAll(toDoList);
-
-    }
-
-    public void outputResultsList() {
-        if (!this.result.isEmpty()) {
-            System.out.println("------------------------------------------------");
-            System.out.println("Phase End:");
-            System.out.println("------------------------------------------------");
-            for (TbRun tR : this.result) {
-                System.out.println(tR.evaluateActivePlanets(tR.roteRun[tR.currentPhase - 1]));
-            }
-        }
-
-        System.out.println("------------------------------------------------");
-        System.out.println("To Do:");
-        System.out.println("------------------------------------------------");
-        for (TbRun tR : this.toDo) {
-            System.out.println(tR.evaluateActivePlanets(tR.roteRun[tR.currentPhase -
-                    1]));
-        }
 
     }
 }
