@@ -91,8 +91,8 @@ pom.xml                     # Maven build configuration
 
 ---
 ## Getting Started (using the provided installer for Windows)
-Download the installer from [installer](installer) folder and install the program to a directory of your choosing. By default it is installed to `C:\Program Files\RotE-Strategy-Helper`. \
-Now you can start the program from the install directory. 
+Download the installer from [installer](installer) folder and install the program to a directory of your choosing. If you get the “Windows protected your PC” message, click "More Info" → "Run Anyway" to install. There is no easy way for me to get a certification for the program, so this will have to do for now.\
+By default it is installed to `C:\Program Files\RotE-Strategy-Helper`. Now you can start the program from the install directory. 
 
 ---
 ## Getting Started (building yourself)
