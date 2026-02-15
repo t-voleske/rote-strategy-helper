@@ -308,11 +308,11 @@ public final class PlanningActions {
         }
         optimalSetCandidates.add(starComboGenerator(threeZerosArray, activePlanets));
 
-        // 6.1. all open planets -1 Star)
+        // 6.1. all open planets -1 Star
         int[] threeMinusOneArray = fillArray(activePlanets.length, -1);
         optimalSetCandidates.add(starComboGenerator(threeMinusOneArray, activePlanets));
 
-        // 6.2. with one 0 Star + rest of open planets -1 Star)
+        // 6.2. with one 0 Star + rest of open planets -1 Star
         for (int i = 0; i < activePlanets.length; i++) {
             int[] oneZeroArrayX = fillArray(activePlanets.length, -1);
             if (activePlanets[i] != null) {
@@ -484,20 +484,6 @@ public final class PlanningActions {
         return arr;
     }
 
-    public void printStarCombinations(List<starCombinationRecord> combinations) {
-        if (combinations.isEmpty()) {
-            // System.out.println("No combinations to print!");
-            return;
-        }
-
-        for (starCombinationRecord record : combinations) {
-            System.out.println("TOTAL: " + record.totalStars() + " || DS Stars: " + record.dsStars() + ", MI Stars: "
-                    + record.miStars() + ", LS Stars: " + record.lsStars()
-                    + ", Ma Stars: " + record.mandaloreStars() + ", Z Stars: " + record.zeffoStars()
-                    + ", Needed Points: " + record.neededPoints());
-        }
-
-    }
 
     private static final double EPSILON = 1e-9;
 
