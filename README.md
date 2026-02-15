@@ -44,7 +44,7 @@ I tried a few different approaches:
 3. Filtering all generated outcomes for different criteria lead to a list of the most optimal outcomes to check each phase, which lead to part one of the current strategy, only checking against a selected desireable outcomes each phase. This drastically cut down on branches created each phase. 
 4. Finally, switching to the greedy approach from 1. for the last phase cut down on branching even more, reducing memory usage by over 99% from GBs needed earlier and making compute time barely noticeable. 
 
-### These are the outcomes checked for phases 1-5:
+### Outcomes checked for phases 1-5:
 1. All open planets 3 Star
 2. One 0 Star + rest of open planets 3 Star\
     2.1. One -1 Star + rest of open planets 3 Star
@@ -75,7 +75,7 @@ src/
     ├── SimulationController.java # Control the simulation with thread pooling
     ├── PhaseSimulation.java      # Phase-level branching TbRun objets, using PlanningActions, maintaining a collection of phase states
     ├── PlanningActions.java      # Outcome generation & GP allocation logic
-    ├── ManualSimulation.java     # WIP: Providing tools to allow manual control of a run (Planned )
+    ├── ManualSimulation.java     # WIP: Providing tools to allow manual control of a run (Planned feature)
     ├── MapState.java             # Saving states of the individual planets for a specific phase
     ├── Planet.java               # Individual planet data (thresholds, points, operations), as well as planet specific methods
     ├── TbRun.java                # Snapshot of a run at a specific phase
