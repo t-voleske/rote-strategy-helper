@@ -13,7 +13,7 @@ I wrote this program to make it possible for anyone to quickly get a decent esti
 ### Key Features
 
 - **Phase-wise simulation:** Simulates the entire TB run by phases, keeping track of all important key figures of all relevant planets.
-- **Branching strategy mechanic:** Generates only desireable star allocation combinations (see [Why only chose the "desireable outcomes" each phase?](#why-only-chose-the-desireable-outcomes-each-phase)) per phase and discards impossible branches. Drastically recudes memory usage and needed calculation time.
+- **Branching strategy mechanic:** Generates only desireable star allocation combinations (see [Why only chose the "desireable outcomes" each phase?](#why-only-chose-the-desireable-outcomes-each-phase)) per phase and discards impossible branches. Drastically reduces memory usage and needed calculation time.
 - **Multi-threaded execution:** Parallelize phase simulations across available CPU cores, for faster execution.
 - **Configurable guild parameters:** Input your guild's key numbers, as well as possible bonus planets, to get as close to in-game behaviour as possible.
 - **Swing GUI:** Desktop interface for entering guild data, saving/loading guild configurations, running simulations and reviewing the top results.
@@ -90,9 +90,9 @@ pom.xml                     # Maven build configuration
 ```
 
 ---
-## Getting Started (using the provided executable for Windows)
-Download the .zip file from [output](output) folder and unpack it. Run the .exe file in the folder. 
-You will most likely get a warning pop-up from windows defender, where you need to press on "More info" to get to option to "Run anyway".
+## Getting Started (using the provided installer for Windows)
+Download the installer from [installer](installer) folder and install the program to a directory of your choosing. By default it is installed to `C:\Program Files\RotE-Strategy-Helper`. \
+Now you can start the program from the install directory. 
 
 ---
 ## Getting Started (building yourself)
