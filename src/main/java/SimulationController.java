@@ -9,24 +9,29 @@ import java.util.concurrent.Future;
 public class SimulationController {
     public ArrayList<TbRun> runResults = new ArrayList<>();
     public TbRun bestRun;
-    public GuildData currenGuildData;
+    public GuildData currentGuildData;
     PhaseSimulation[] phaseContainer = new PhaseSimulation[6];
     int maxRunsPerPhase = 50000;
     private ExecutorService executor;
     private int numThreads;
 
     public SimulationController(GuildData inputGuild) {
-        this.currenGuildData = inputGuild;
+        this.currentGuildData = inputGuild;
     }
 
     public ArrayList<TbRun> executeSimulation(int runsToReturn) {
 
         numThreads = Runtime.getRuntime().availableProcessors();
         this.executor = Executors.newFixedThreadPool(numThreads);
-        runResults = runFullSimulation(this.currenGuildData);
+        runResults = runFullSimulation(this.currentGuildData);
+
+        // Remove duplicate runs from results
+        runResults = removeDuplicateRuns(runResults);
+
         System.out.print("\n");
         System.out.print(runResults.size());
-        outputTopXRuns(runResults, runsToReturn);
+        // outputTopXRuns(runResults, runsToReturn);
+        outputTopXRuns(runResults, Math.min(runsToReturn, runResults.size()));
 
         executor.shutdown();
         return runResults;
@@ -93,9 +98,12 @@ public class SimulationController {
     public final void outputTopXRuns(ArrayList<TbRun> inputArrayList, int outputCountX) {
         inputArrayList.sort(Comparator.comparingInt((TbRun run) -> run.updateCurrentStars()).reversed());
         inputArrayList.subList(outputCountX, inputArrayList.size()).clear();
+        System.out.println("\n==================================================");
+        System.out.println("\n" + inputArrayList.toString());
         for (int i = 0; i < inputArrayList.size(); i++) {
             System.out.println("\n==================================================");
             System.out.println("Top " + (i + 1) + " - " + inputArrayList.get(i).starCounter + " :");
+            System.out.println("\n" + inputArrayList.get(i).toString());
             System.out.println("==================================================");
             for (MapState m : inputArrayList.get(i).roteRun) {
                 System.out.print("- Phase " + m.currentPhase + "\n");
@@ -107,6 +115,8 @@ public class SimulationController {
 
     public final String outputTopXRunString(ArrayList<TbRun> inputArrayList, int outputCountX) {
         StringBuilder output = new StringBuilder();
+        System.out.println("\n==================================================");
+        System.out.println("\n" + inputArrayList.size() + " runs completed. Top " + outputCountX + " runs:");
         inputArrayList.sort(Comparator.comparingInt((TbRun run) -> run.updateCurrentStars()).reversed());
         inputArrayList.subList(outputCountX, inputArrayList.size()).clear();
         for (int i = 0; i < inputArrayList.size(); i++) {
@@ -120,5 +130,22 @@ public class SimulationController {
             }
         }
         return output.toString();
+    }
+
+    private ArrayList<TbRun> removeDuplicateRuns(ArrayList<TbRun> inputList) {
+        ArrayList<TbRun> deduplicated = new ArrayList<>();
+        for (TbRun candidate : inputList) {
+            boolean isDuplicate = false;
+            for (TbRun existing : deduplicated) {
+                if (existing.isDuplicateRun(candidate)) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            if (!isDuplicate) {
+                deduplicated.add(candidate);
+            }
+        }
+        return deduplicated;
     }
 }

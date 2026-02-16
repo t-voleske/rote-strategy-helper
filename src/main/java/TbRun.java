@@ -97,4 +97,25 @@ public class TbRun {
         return output.toString();
     }
 
+    public boolean isDuplicateRun(TbRun other) {
+        if (other == null || this.roteRun.length != other.roteRun.length) {
+            return false;
+        }
+        for (int i = 0; i < this.roteRun.length; i++) {
+            // Both null is fine (matching empty slots)
+            if (this.roteRun[i] == null && other.roteRun[i] == null) {
+                continue;
+            }
+            // One null, one not — not a duplicate
+            if (this.roteRun[i] == null || other.roteRun[i] == null) {
+                return false;
+            }
+            // Use compareMapStates to check equality
+            if (!this.roteRun[i].compareMapStates(this.roteRun[i], other.roteRun[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }

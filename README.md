@@ -91,8 +91,10 @@ pom.xml                     # Maven build configuration
 
 ---
 ## Getting Started (using the provided installer for Windows)
-Download the installer from [installer](installer) folder and install the program to a directory of your choosing. If you get the “Windows protected your PC” message, click "More Info" → "Run Anyway" to install. There is no easy way for me to get a certification for the program, so this will have to do for now.\
-By default it is installed to `C:\Program Files\RotE-Strategy-Helper`. Now you can start the program from the install directory. 
+Download the installer from [installer](installer) folder and install the program to a directory of your choosing.   
+If you get the “Windows protected your PC” message, click "More Info" → "Run Anyway" to install. There is no easy way for me to get a certification for the program, so this will have to do for now.  
+By default it is installed to `C:\Program Files\RotE-Strategy-Helper`. If you choose to use that install directory, you will need to run the program as an administrator, to be able to save and load guild data. \
+Now you can start the program from where you installed it. 
 
 ---
 ## Getting Started (building yourself)
@@ -136,7 +138,7 @@ mvn compile exec:java -Dexec.mainClass="StrategyHelper"
    - **Zeffo / Mandalore readiness:** check if your guild can unlock these bonus planets
 3. (Optional) Press "Save guild data" to save your guild's information to a text file. You can load this again at a later time.
 4. Click **Start Run** to begin the simulation.
-5. Browse the top 10 results using the **Previous / Next** buttons.
+5. Browse the top 15 results using the **Previous / Next** buttons.
 
 ---
 

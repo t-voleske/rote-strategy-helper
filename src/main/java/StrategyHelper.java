@@ -668,7 +668,7 @@ public class StrategyHelper extends JFrame {
         SwingWorker<ArrayList<TbRun>, Void> worker = new SwingWorker<>() {
             @Override
             protected ArrayList<TbRun> doInBackground() throws Exception {
-                return simmer.executeSimulation(10);
+                return simmer.executeSimulation(15);
             }
 
             @Override
