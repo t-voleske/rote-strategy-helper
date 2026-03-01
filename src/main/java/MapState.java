@@ -87,7 +87,7 @@ public class MapState {
     public MapState cloneMapState() {
         MapState cloned = new MapState(this.currentGuild);
 
-        // Copy primitive fields
+        // Copy simple fields
         cloned.currentDsDepth = this.currentDsDepth;
         cloned.currentMiDepth = this.currentMiDepth;
         cloned.currentLsDepth = this.currentLsDepth;

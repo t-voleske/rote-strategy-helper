@@ -37,7 +37,34 @@ public class ManualSimulation {
         return output.toString();
     }
 
-    public void attemptCheckpoint(int checkpoint){
-        //attempt to push to a specified checkpoint, eg. 0-3 stars 
+    public void attemptCheckpoint(int targetCheckpoint, int planetIndex, MapState targetState) {
+        // attempt to push to a specified checkpoint, eg. 0-3 stars
+        double neededPoints = Double.MAX_VALUE;
+        Planet targetPlanet = targetState.getCurrentActivePlanets()[planetIndex];
+        boolean triggerOperations = false;
+        double operationsWorth = 0;
+        switch (targetCheckpoint) {
+            case 1:
+                neededPoints = targetPlanet.neededPoints1Star;
+                triggerOperations = targetPlanet.getCurrentStar() <= 1;
+            case 2:
+                neededPoints = targetPlanet.neededPoints2Star;
+                triggerOperations = targetPlanet.getCurrentStar() <= 1;
+            case 3:
+                neededPoints = targetPlanet.neededPointsFull;
+                triggerOperations = targetPlanet.getCurrentStar() <= 1;
+            default: // case 0
+                neededPoints = targetPlanet.neededForFullPreload();
+        }
+        if (triggerOperations && targetCheckpoint >= 1) { // Ops not yet triggered. Get operations worth for planet
+            operationsWorth = targetPlanet.getOperationsPoints();
+        }
+        if (targetState.phaseGpBudget < (neededPoints - operationsWorth)) {
+            throw new BudgetExceededException("Operation is not possible, as it exceeds the remaining budget!");
+        }
+        targetPlanet.addPoints(neededPoints); // perform operation
+        targetState.phaseGpBudget = targetState.phaseGpBudget - neededPoints - operationsWorth; // adjust phase budget
+
     }
+
 }
