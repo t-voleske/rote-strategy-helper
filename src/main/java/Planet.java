@@ -86,7 +86,7 @@ public class Planet {
         return round(this.operationsPoints);
     }
 
-    public double neededForNextCheckpoint(Planet p) {
+    public double neededForNextCheckpoint() {
         if (this.currentPoints < this.fullPreloadPoints) {
             return round(this.fullPreloadPoints - this.currentPoints);
         } else if (this.currentPoints < this.neededPoints1Star) {
@@ -181,6 +181,9 @@ public class Planet {
         if (this.currentPoints > this.neededPointsFull) {
             this.currentPoints = this.neededPointsFull;
         }
+        if (!this.operationsTriggered && this.currentPoints >= this.neededPoints1Star) {
+            this.operationsTriggered = true;
+        }
         return this.currentPoints;
     }
 
@@ -194,5 +197,36 @@ public class Planet {
 
     public double getCurrentPoints() {
         return round(this.currentPoints);
+    }
+
+    public int starReachable(int starToReach, double budget) {
+        int returnValue = 0;
+        double operationsWorth = 0; // Default value for operations points
+        if (!this.operationsTriggered) {
+            operationsWorth = this.operationsPoints;
+        }
+        switch (starToReach) {
+            case 3 -> {
+                if (this.neededPointsFull <= (budget + operationsWorth + this.currentPoints)) {
+                    return 1;
+                }
+            }
+            case 2 -> {
+                if (this.neededPoints2Star <= (budget + operationsWorth + this.currentPoints)) {
+                    return 1;
+                }
+            }
+            case 1 -> {
+                if (this.neededPoints1Star <= (budget + operationsWorth + this.currentPoints)) {
+                    return 1;
+                }
+            }
+            case 0 -> {
+                if (this.fullPreloadPoints <= (budget + this.currentPoints)) {
+                    return 1;
+                }
+            }
+        }
+        return returnValue;
     }
 }

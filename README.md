@@ -1,6 +1,6 @@
 # RotE Strategy Helper
 
-A Java-based simulation tool for **Rise of the Empire** (RotE) Territory Battles in *Star Wars: Galaxy of Heroes*. It calculates a decent allocation strategy for your guild across all 6 phases, to give you an overview of how many stars you can expect to reach. 
+A Java-based simulation tool for **Rise of the Empire** (RotE) Territory Battles in *Star Wars: Galaxy of Heroes*. It calculates a decent allocation strategy for your guild across all 6 phases or lets you move through the phases in manual simulation mode, to give you an overview of how many stars you can expect to reach. 
 
 ---
 
@@ -12,6 +12,7 @@ I wrote this program to make it possible for anyone to quickly get a decent esti
 
 ### Key Features
 
+- **Manual simulation:** enables the user to manually decide on which operations to take, with the same constraints that a real run would have.
 - **6 phase simulation:** simulates the entire TB run by phases, keeping track of all important key figures of all relevant planets.
 - **Branching strategy mechanic:** generates only desirable star allocation combinations (see [Why only chose the "desirable outcomes" each phase?](#why-only-chose-the-desirable-outcomes-each-phase)) per phase and discards impossible branches. Drastically reduces memory usage and needed calculation time.
 - **Multi-threaded execution:** allow simultaneous phase simulations across available CPU cores, to reduce execution time.
@@ -22,9 +23,8 @@ I wrote this program to make it possible for anyone to quickly get a decent esti
 
 ### Planned Features
 
-- **Manual simulation mode:** start with a clean RotE run with the constraints of your guild's data. Manually decide on where to allocate points, finish platoons and points to add from missions.
 - **Manual takeover of a run:** initiate a manual simulation with any phase of an automatically generated run as the start point.
-- **Mission points additions:** adding an option for the user to select mission points to be based in planet depth or on individual planrts, to allow for more control or keep simplicity.
+- **Mission points additions:** adding an option for the user to select mission points to be based in planet depth or on individual planets, to allow for more control or keep simplicity.
 - **In depth control of mission points:** add a menu to the GUI that allows for exact control of mission point behaviour, like deciding on depth or planet based calculation, multipliers based on finished platoons, etc.
 
 ## How It Works
@@ -33,7 +33,7 @@ I wrote this program to make it possible for anyone to quickly get a decent esti
 2. A RotE run is initialized with fresh starting planets in phase 1.
 3. For each phase, a set of desirable outcomes (e.g. 3-Star Dark Side, 3-Star Mixed, 0-Star Light Side) are tested. If they fit the guild's constraints, a new run snapshot (`TbRun` object) is created, on which all desirable outcomes can be tested again in the next phase.
 4. Each unique phase outcome produces a new `MapState` object, which is used to save the current state of the phase. Each snapshot has a history of the phase outcomes from all 6 phases.
-5. After all 6 phases are done, runs are ranked by total worth and the top results are displayed in the output of the GUI. Fully completing Zeffo and Mandalore is valued the same as other 3-Star planets for both, even though they are only worth 1 star each, to account for the Kyros they grant every guild member. 
+5. After all 6 phases are done, runs are ranked by total worth and the top results are displayed in the output of the GUI. Fully completing Zeffo and Mandalore is valued the same as other 3-Star planets for both, even though they are only worth 1 star each, to account for the Kyros they grant to every guild member. 
 
 ---
 ## Why only choose the "desirable outcomes" each phase?
@@ -75,7 +75,7 @@ src/
     ├── SimulationController.java # Control the simulation with thread pooling
     ├── PhaseSimulation.java      # Phase-level branching TbRun objects, using PlanningActions, maintaining a collection of phase states
     ├── PlanningActions.java      # Outcome generation & GP allocation logic
-    ├── ManualSimulation.java     # WIP: providing tools to allow manual control of a run (Planned feature)
+    ├── ManualSimulation.java     # providing tools to allow manual control over the simulation of a fresh TB run
     ├── MapState.java             # Saving states of the individual planets for a specific phase
     ├── Planet.java               # Individual planet data (thresholds, points, operations), as well as planet specific methods
     ├── TbRun.java                # Snapshot of a run at a specific phase
@@ -124,9 +124,10 @@ Or run directly from source:
 mvn compile exec:java -Dexec.mainClass="StrategyHelper"
 ```
 
----
+Or use the provided installer
 
-## Usage
+
+## Usage (automated simulation)
 
 1. Launch the application.
 2. Either press "Load saved Guild", if you have already saved a guild's data, or fill in your guild's information:
@@ -137,8 +138,27 @@ mvn compile exec:java -Dexec.mainClass="StrategyHelper"
    - **Mission efficiency:** (optional) toggle on and set per-depth percentages. Give it a conservative estimate. Better to lowball than to overshoot here.
    - **Zeffo / Mandalore readiness:** check if your guild can unlock these bonus planets
 3. (Optional) Press "Save guild data" to save your guild's information to a text file. You can load this again at a later time.
-4. Click **Start Run** to begin the simulation.
+4. Click **Start strategy calculation** to begin the automated simulation run.
 5. Browse the top 15 results using the **Previous / Next** buttons.
+
+---
+
+## Usage (manual simulation)
+
+1. Launch the application.
+2. Either press "Load saved Guild", if you have already saved a guild's data, or fill in your guild's information:
+   - **Total Guild Points** (in millions)
+   - **Active Guild Members**
+   - **Assumed GP Efficiency:** percentage of total GP your guild realistically deploys
+   - **Operations per depth:** comma-separated values for each planet tier (DS, Mixed, LS)
+   - **Mission efficiency:** (optional) toggle on and set per-depth percentages. Give it a conservative estimate. Better to lowball than to overshoot here. Use the checkbox to toggle the use of mission points in the manual simulation.
+   - **Zeffo / Mandalore readiness:** check if your guild can unlock these bonus planets
+3. (Optional) Press "Save guild data" to save your guild's information to a text file. You can load this again at a later time.
+4. Click **Manual Simulation** to start a manual simulation run.
+5. Mission points will be added to the planets at the start of each phase, depending on the chosen settings.
+6. Use the buttons on the right of each planet, to simulate your guild's actions. Use the **Undo / Reset Phase** buttons to revert any changes made in the phase. 
+7. Press **Advance Phase**, to reach the next phase.
+8. Once done with the last phase, press the now visible **Review Run** button, to get a full run summary. 
 
 ---
 
@@ -149,8 +169,9 @@ mvn compile exec:java -Dexec.mainClass="StrategyHelper"
 | Total Guild Points | Guild's total GP in millions | `350.0` |
 | Active Members | Number of participating members | `50` |
 | GP Efficiency | Fraction of GP actually deployed (0–1) | `0.85` |
+| Automatically add mission points | Do or don't add mission points in the manual simulation | `true` / `false` |
 | Mission Efficiency | Per-depth mission completion rate (0–1) | `[0.5, 0.6, 0.7, 0.8, 0.9, 1.0]` |
-| Operations Array | Operations possible per depth per alignment | `[[10,10,10], ..., [2,2]]` |
+| Operations Array | Operations possible per depth per alignment  Per planet: min. 0, max. 6 | `[[6,6,6], ..., [2,2]]` |
 | Zeffo Ready | Guild can unlock Zeffo bonus planet | `true` / `false` |
 | Mandalore Ready | Guild can unlock Mandalore bonus planet | `true` / `false` |
 
@@ -159,15 +180,27 @@ mvn compile exec:java -Dexec.mainClass="StrategyHelper"
 ## Architecture
 
 ```
-StrategyCalculator (GUI)
-    └── SimulationController
-            └── PhaseSimulation (×N threads)
-                    ├── PlanningActions - generates star combinations
-                    ├── MapState - Phase snapshot 
-                    └── TbRun - Tracking status of a full run at a specific phase
+StrategyHelper (GUI)
+├── Automated Simulation
+│   └── SimulationController
+│       └── PhaseSimulation (×N threads)
+│           └── PlanningActions - generates star combinations
+│
+├── Manual Simulation
+│   └── ManualSimulation (action history, undo/reset)
+│       └── PhaseSimulation - phase transitions & mission prep
+│
+└── Shared Data Model
+    ├── TbRun - snapshot of a full run across all 6 phases
+    │   └── MapState - planet state for a single phase
+    │       └── Planet - individual planet data & operations
+    ├── GuildData - guild-level input parameters
+    └── BudgetExceededException - thrown when GP budget is exceeded
 ```
 
-The simulation uses a **breadth-first branching** approach: Each phase branches out into all desirable star outcomes. If necessary, those are then pruned to the top 50,000 candidates (by cumulative worth) before advancing to the next phase. Completed `MapState` objects are collected in a `HashSet` to drastically reduce memory usage from duplicates among all different branches.
+The **automated simulation** uses a breadth-first branching approach: Each phase branches out into all desirable star outcomes, which are then pruned to the top 50,000 candidates (by cumulative worth) before advancing to the next phase. Completed `MapState` objects are collected in a `HashSet` to drastically reduce memory usage from duplicates among all different branches.
+
+The **manual simulation** reuses `PhaseSimulation` for phase transitions and mission point setup, but lets the user control GP allocation directly, with full undo/reset support per phase.
 
 ---
 ## Acknowledgements
