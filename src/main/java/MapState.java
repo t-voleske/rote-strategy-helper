@@ -57,7 +57,7 @@ public class MapState {
                 3 * 0.34125 + 1 * 0.6825));
         lightSide.add(new Planet("Lothal", 3, 2, 524.99, 419.99, 246.74, inputGuild.assumedMissionEfficiency[3],
                 3 * 0.4936 + 1 * 0.9872));
-        lightSide.add(new Planet("Ring of Kafrene", 4, 2, 729.95, 620.46, 341.25,
+        lightSide.add(new Planet("Kafrene", 4, 2, 729.95, 620.46, 341.25,
                 inputGuild.assumedMissionEfficiency[4], 4 * 0.72174 + 1 * 1.44348));
         lightSide.add(new Planet("Scarif", 5, 2, 1188.69, 1010.38, 555.71, inputGuild.assumedMissionEfficiency[5],
                 4 * 1.15172 + 1 * 2.300));

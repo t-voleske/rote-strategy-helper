@@ -26,6 +26,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
@@ -46,6 +47,7 @@ public class StrategyHelper extends JFrame {
     private JTextField[] missionEfficiencyFields;
     private JTextField[] depthFields;
     private JCheckBox includeMissionsCheckBox;
+    private JCheckBox includeMissionsManualCheckBox;
     private JCheckBox zeffoReadyCheckBox;
     private JCheckBox mandaloreReadyCheckBox;
     private JPanel missionPanel;
@@ -78,6 +80,30 @@ public class StrategyHelper extends JFrame {
     private ArrayList<TbRun> results;
     private int currentResultIndex = 0;
 
+    private ManualSimulation manualSim;
+    private JPanel manualSimPanel;
+    private JLabel msPhaseLabel;
+    private JLabel msStarLabel;
+    private JLabel msBudgetLabel;
+    private JLabel[] msPlanetNameLabels;
+    private JLabel[] msPlanetStarLabels;
+    private JLabel[] msPlanetPointsLabels;
+    private JButton[][] msCheckpointButtons;
+    private JButton[] msLeftoverButtons;
+    private JButton[] msCustomPointsButtons;
+    private JTextField[] msCustomPointsFields;
+    private JPanel[] msCustomPointsRows;
+    private JPanel[] msPlanetRows;
+    private JSeparator[] msPlanetSeparators;
+    private JButton msAdvanceButton;
+    private JButton msReviewButton;
+    private JLabel msStatusLabel;
+    private CardLayout msCardLayout;
+    private JPanel msCardPanel;
+    private JTextPane msReviewTextPane;
+
+    private boolean addMissionPoints = false;
+
     private static final String SAVE_FILE_NAME = "guild_save.txt";
     private static final Path SAVE_FILE_PATH = Paths.get(SAVE_FILE_NAME);
 
@@ -87,12 +113,13 @@ public class StrategyHelper extends JFrame {
 
     private static final String DATA_ENTRY_VIEW = "dataEntry";
     private static final String RESULTS_VIEW = "results";
+    private static final String MANUAL_SIM_VIEW = "manualSim";
 
     private static final String NUMBER_FORMAT_ERROR_MESSAGE = """
-            Invalid number format.
+            Invalid input format.
 
-            Please use a dot (.) as the decimal separator instead of a comma.
-            For example: 300.5 instead of 300,5""";
+            Please use a dot (.) as the decimal separator instead of a comma for numbers.
+            For example: 300.5 instead of 300,5.""";
 
     public StrategyHelper() {
         setTitle("Guild Calculator");
@@ -119,10 +146,16 @@ public class StrategyHelper extends JFrame {
 
     private JPanel buildDataEntryPanel() {
         JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        JPanel guildInfoPanel = new JPanel(new GridBagLayout());
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(new EmptyBorder(15, 15, 0, 15));
+
+        JPanel guildInfoPanel = new JPanel(new GridBagLayout()) {
+            @Override
+            public Dimension getMaximumSize() {
+                return new Dimension(super.getMaximumSize().width, getPreferredSize().height);
+            }
+        };
         guildInfoPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "Guild Information",
                 TitledBorder.LEFT, TitledBorder.TOP));
@@ -137,7 +170,7 @@ public class StrategyHelper extends JFrame {
 
         gbc.gridx = 1;
         gbc.weightx = 0.7;
-        guildNameField = new JTextField(20);
+        guildNameField = new JTextField("Guild Name", 20);
         guildInfoPanel.add(guildNameField, gbc);
 
         gbc.gridx = 0;
@@ -169,11 +202,11 @@ public class StrategyHelper extends JFrame {
         gbc.gridx = 1;
         gbc.weightx = 0.7;
         assumedGpEfficiencyField = new JTextField(20);
-        assumedGpEfficiencyField.setText("0");
+        assumedGpEfficiencyField.setText("50");
         guildInfoPanel.add(assumedGpEfficiencyField, gbc);
 
         mainPanel.add(guildInfoPanel);
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        // mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         JPanel checkBoxPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         includeMissionsCheckBox = new JCheckBox("Include missions in calculation?");
@@ -192,14 +225,22 @@ public class StrategyHelper extends JFrame {
                 TitledBorder.LEFT, TitledBorder.TOP));
         missionPanel.setVisible(false);
 
+        includeMissionsManualCheckBox = new JCheckBox("Automatically add mission points in manual simulation?");
+        includeMissionsManualCheckBox.setSelected(false);
+        includeMissionsManualCheckBox.addActionListener(e -> {
+            toggleMissionPoints();
+        });
+
         missionEfficiencyFields = new JTextField[6];
         GridBagConstraints mgbc = new GridBagConstraints();
         mgbc.insets = new Insets(5, 5, 5, 5);
         mgbc.fill = GridBagConstraints.HORIZONTAL;
 
+        missionPanel.add(includeMissionsManualCheckBox, mgbc);
+
         for (int i = 0; i < 6; i++) {
             mgbc.gridx = 0;
-            mgbc.gridy = i;
+            mgbc.gridy = i + 1;
             mgbc.weightx = 0.3;
             missionPanel.add(new JLabel(MISSION_LABELS[i]), mgbc);
 
@@ -211,7 +252,7 @@ public class StrategyHelper extends JFrame {
         }
 
         mainPanel.add(missionPanel);
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        // mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         JPanel readyPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         zeffoReadyCheckBox = new JCheckBox("Zeffo ready?");
@@ -225,9 +266,14 @@ public class StrategyHelper extends JFrame {
         readyPanel.add(zeffoReadyCheckBox);
         readyPanel.add(mandaloreReadyCheckBox);
         mainPanel.add(readyPanel);
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        // mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
-        JPanel depthPanel = new JPanel(new GridBagLayout());
+        JPanel depthPanel = new JPanel(new GridBagLayout()) {
+            @Override
+            public Dimension getMaximumSize() {
+                return new Dimension(super.getMaximumSize().width, getPreferredSize().height);
+            }
+        };
         depthPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "# of possible platoons per planet",
                 TitledBorder.LEFT, TitledBorder.TOP));
@@ -262,12 +308,13 @@ public class StrategyHelper extends JFrame {
         }
 
         mainPanel.add(depthPanel);
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
-        statusLabel = new JLabel(" ");
         JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        statusPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "Status",
+                TitledBorder.LEFT, TitledBorder.TOP));
+        statusLabel = new JLabel(" ");
         statusPanel.add(statusLabel);
-        mainPanel.add(statusPanel);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton saveGuildButton = new JButton("Save guild data");
@@ -276,22 +323,29 @@ public class StrategyHelper extends JFrame {
         saveGuildButton.addActionListener(e -> handleSave());
         startRunButton.addActionListener(e -> handleStartRun());
 
+        JButton manualSimButton = new JButton("Manual Simulation");
+        manualSimButton.addActionListener(e -> handleManualSimulation());
+
         buttonPanel.add(saveGuildButton);
         buttonPanel.add(startRunButton);
-        mainPanel.add(buttonPanel);
+        buttonPanel.add(manualSimButton);
 
         loadButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         loadGuildButton = new JButton("Load saved guild");
         loadGuildButton.addActionListener(e -> handleLoad());
         loadButtonPanel.add(loadGuildButton);
         loadButtonPanel.setVisible(Files.exists(SAVE_FILE_PATH));
-        mainPanel.add(loadButtonPanel);
 
-        JScrollPane scrollPane = new JScrollPane(mainPanel);
-        scrollPane.setBorder(null);
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
+        bottomPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        bottomPanel.add(statusPanel);
+        bottomPanel.add(buttonPanel);
+        bottomPanel.add(loadButtonPanel);
 
         JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.add(scrollPane, BorderLayout.CENTER);
+        wrapper.add(mainPanel, BorderLayout.NORTH);
+        wrapper.add(bottomPanel, BorderLayout.SOUTH);
         return wrapper;
     }
 
@@ -361,19 +415,18 @@ public class StrategyHelper extends JFrame {
                     NUMBER_FORMAT_ERROR_MESSAGE,
                     "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
         try {
             saveGuildToFile();
             loadButtonPanel.setVisible(true);
             revalidate();
-            JOptionPane.showMessageDialog(this,
-                    "Guild data has been saved.",
-                    "Save Successful", JOptionPane.INFORMATION_MESSAGE);
+            statusLabel.setText("Guild data has been saved.");
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Failed to save guild data:\n" + ex.getMessage(),
-                    "Save Error", JOptionPane.ERROR_MESSAGE);
+            statusLabel.setText("Failed to save guild data: " + ex.getMessage());
         }
     }
 
@@ -395,6 +448,8 @@ public class StrategyHelper extends JFrame {
             writer.write("zeffoReady=" + zeffoReady);
             writer.newLine();
             writer.write("mandaloreReady=" + mandaloreReady);
+            writer.newLine();
+            writer.write("addMissionPoints=" + addMissionPoints);
             writer.newLine();
 
             // Mission efficiencies as semicolon-separated (6 values)
@@ -426,13 +481,9 @@ public class StrategyHelper extends JFrame {
         try {
             loadGuildFromFile();
             populateFieldsFromStoredValues();
-            JOptionPane.showMessageDialog(this,
-                    "Guild data loaded successfully.",
-                    "Load Successful", JOptionPane.INFORMATION_MESSAGE);
+            statusLabel.setText("Guild data loaded successfully.");
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Failed to load guild data:\n" + ex.getMessage(),
-                    "Load Error", JOptionPane.ERROR_MESSAGE);
+            statusLabel.setText("Failed to load guild data:\n" + ex.getMessage());
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this,
                     "Save file is corrupted or has been tampered with:\n" + ex.getMessage(),
@@ -473,6 +524,7 @@ public class StrategyHelper extends JFrame {
         assumedGpEfficiency = parseDoubleStrict(getRequired(data, "assumedGpEfficiency"), "assumedGpEfficiency");
         zeffoReady = parseBooleanStrict(getRequired(data, "zeffoReady"), "zeffoReady");
         mandaloreReady = parseBooleanStrict(getRequired(data, "mandaloreReady"), "mandaloreReady");
+        addMissionPoints = parseBooleanStrict(getRequired(data, "addMissionPoints"), "addMissionPoints");
 
         // Parse mission efficiencies
         String missionStr = getRequired(data, "missionEfficiency");
@@ -510,7 +562,8 @@ public class StrategyHelper extends JFrame {
     private boolean isValidKey(String key) {
         return key.equals("guildName") || key.equals("totalGuildPoints") || key.equals("activeGuildMembers")
                 || key.equals("assumedGpEfficiency") || key.equals("zeffoReady") || key.equals("mandaloreReady")
-                || key.equals("missionEfficiency") || key.equals("operationsPossible");
+                || key.equals("missionEfficiency") || key.equals("operationsPossible")
+                || key.equals("addMissionPoints");
     }
 
     private String getRequired(Map<String, String> data, String key) throws IllegalArgumentException {
@@ -583,6 +636,9 @@ public class StrategyHelper extends JFrame {
                 break;
             }
         }
+
+        includeMissionsManualCheckBox.setSelected(addMissionPoints);
+
         includeMissionsCheckBox.setSelected(hasMissions);
         missionPanel.setVisible(hasMissions);
         for (int i = 0; i < 6; i++) {
@@ -606,15 +662,35 @@ public class StrategyHelper extends JFrame {
         repaint();
     }
 
-    private void parseAndStoreValues() throws NumberFormatException {
+    private void parseAndStoreValues() throws IllegalArgumentException {
+        if (guildNameField.getText().equalsIgnoreCase("")) {
+            throw new IllegalArgumentException("Please provide a guild name.");
+        }
         guildName = guildNameField.getText();
+        if (totalGuildPointsField.getText().isBlank()
+                || Double.parseDouble(totalGuildPointsField.getText()) < 200) {
+            throw new IllegalArgumentException("Guild GP has to be at least 200m, to be able to enter RotE TB.");
+        }
         totalGuildPoints = Double.parseDouble(totalGuildPointsField.getText());
         activeGuildMembers = (Integer) activeGuildMembersSpinner.getValue();
+        if (assumedGpEfficiencyField.getText().isBlank()
+                || Double.parseDouble(assumedGpEfficiencyField.getText()) < 0) {
+            throw new IllegalArgumentException(
+                    "Please enter a valid number for Assumed GP Efficiency. Negative numbers are not allowed.");
+        }
         assumedGpEfficiency = Double.parseDouble(assumedGpEfficiencyField.getText()) / 100.0;
 
         assumedMissionEfficiency = new double[6];
         if (includeMissionsCheckBox.isSelected()) {
             for (int i = 0; i < 6; i++) {
+                if (missionEfficiencyFields[i].getText().isBlank()) {
+                    throw new IllegalArgumentException(
+                            "Please provide values for Assumed Mission Efficiency fields, or uncheck the inclusion checkmark above.");
+                } else if (Double.parseDouble(missionEfficiencyFields[i].getText()) < 0
+                        || Double.parseDouble(missionEfficiencyFields[i].getText()) > 100) {
+                    throw new IllegalArgumentException(
+                            "Values for Assumed Mission Efficiency fields have to be at least 0 and at most 100.");
+                }
                 assumedMissionEfficiency[i] = Double.parseDouble(missionEfficiencyFields[i].getText()) / 100.0;
             }
         }
@@ -633,11 +709,16 @@ public class StrategyHelper extends JFrame {
             int expectedParts = (i < 6) ? 3 : 2;
             if (parts.length != expectedParts) {
                 throw new NumberFormatException(
-                        "Expected " + expectedParts + " comma-separated integers for " + depthLabels[i]);
+                        "Please enter the amount of possible platoons per planet as comma separated numbers,\n e.g. '3, 6, 3' for 3 planets");
             }
             operationsPossible[i] = new int[expectedParts];
             for (int j = 0; j < expectedParts; j++) {
-                operationsPossible[i][j] = Integer.parseInt(parts[j].trim());
+                int tempInt = Integer.parseInt(parts[j].trim());
+                if (tempInt < 0 || tempInt > 6) {
+                    throw new IllegalArgumentException(
+                            "Invalid value for number of possible platoons. Each value has to be at least 0 and at most 6.");
+                }
+                operationsPossible[i][j] = tempInt;
             }
         }
     }
@@ -645,10 +726,8 @@ public class StrategyHelper extends JFrame {
     private void handleStartRun() {
         try {
             parseAndStoreValues();
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this,
-                    NUMBER_FORMAT_ERROR_MESSAGE,
-                    "Input Error", JOptionPane.ERROR_MESSAGE);
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -741,6 +820,385 @@ public class StrategyHelper extends JFrame {
         activeGuild = new GuildData(totalGuildPoints, activeGuildMembers, assumedGpEfficiency,
                 assumedMissionEfficiency, operationsPossible, zeffoReady, mandaloreReady);
         simmer = new SimulationController(activeGuild);
+    }
+
+    // ------------------------------------------------------------------
+    // Manual Simulation
+    // ------------------------------------------------------------------
+
+    private void handleManualSimulation() {
+        try {
+            parseAndStoreValues();
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this,
+                    ex.getMessage(),
+                    "Input Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int selectedPhase = 1; // TODO: allow picking a later phase from an automated run
+        prepareRun();
+        manualSim = new ManualSimulation(activeGuild, selectedPhase);
+        manualSim.setAddMissionPoints(addMissionPoints);
+        manualSim.setUpTbRun(null);
+
+        switchToManualSimView();
+    }
+
+    private void switchToManualSimView() {
+        if (manualSimPanel != null) {
+            cardPanel.remove(manualSimPanel);
+        }
+        manualSimPanel = buildManualSimPanel();
+        cardPanel.add(manualSimPanel, MANUAL_SIM_VIEW);
+
+        setMinimumSize(new Dimension(900, 550));
+        setPreferredSize(new Dimension(900, 550));
+        pack();
+        setLocationRelativeTo(null);
+        cardLayout.show(cardPanel, MANUAL_SIM_VIEW);
+        refreshManualSimPanel();
+    }
+
+    private void switchToDataEntryFromManualSim() {
+        setMinimumSize(new Dimension(550, 900));
+        setPreferredSize(new Dimension(550, 900));
+        pack();
+        setLocationRelativeTo(null);
+        switchToDataEntry();
+    }
+
+    private JPanel buildManualSimPanel() {
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+
+        // --- NORTH: Info bar ---
+        JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
+        msPhaseLabel = new JLabel();
+        msStarLabel = new JLabel();
+        msBudgetLabel = new JLabel();
+        infoPanel.add(msPhaseLabel);
+        infoPanel.add(msStarLabel);
+        infoPanel.add(msBudgetLabel);
+        mainPanel.add(infoPanel, BorderLayout.NORTH);
+
+        // --- CENTER: Planet rows ---
+        JPanel planetsPanel = new JPanel();
+        planetsPanel.setLayout(new BoxLayout(planetsPanel, BoxLayout.Y_AXIS));
+        planetsPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "Planets",
+                TitledBorder.LEFT, TitledBorder.TOP));
+        msPlanetRows = new JPanel[5];
+        msPlanetSeparators = new JSeparator[4];
+        msPlanetNameLabels = new JLabel[5];
+        msPlanetStarLabels = new JLabel[5];
+        msPlanetPointsLabels = new JLabel[5];
+        msCheckpointButtons = new JButton[5][4];
+        msLeftoverButtons = new JButton[5];
+        msCustomPointsButtons = new JButton[5];
+        msCustomPointsFields = new JTextField[5];
+        msCustomPointsRows = new JPanel[5];
+
+        String[] checkpointLabels = { "Preload", "1 Star", "2 Stars", "3 Stars" };
+
+        for (int i = 0; i < 5; i++) {
+            msPlanetRows[i] = new JPanel(new BorderLayout());
+
+            // Left side: labels
+            JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+            msPlanetNameLabels[i] = new JLabel();
+            msPlanetNameLabels[i].setPreferredSize(new Dimension(75, 20));
+            msPlanetStarLabels[i] = new JLabel();
+            msPlanetStarLabels[i].setPreferredSize(new Dimension(120, 20));
+            msPlanetPointsLabels[i] = new JLabel();
+            msPlanetPointsLabels[i].setPreferredSize(new Dimension(160, 20));
+            labelPanel.add(msPlanetNameLabels[i]);
+            labelPanel.add(msPlanetStarLabels[i]);
+            labelPanel.add(msPlanetPointsLabels[i]);
+
+            // Right side: buttons stacked vertically
+            JPanel rightPanel = new JPanel();
+            rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+            final int planetIndex = i;
+            for (int j = 0; j < 4; j++) {
+                final int checkpoint = j;
+                msCheckpointButtons[i][j] = new JButton(checkpointLabels[j]);
+                msCheckpointButtons[i][j].addActionListener(e -> handleCheckpoint(checkpoint, planetIndex));
+                buttonPanel.add(msCheckpointButtons[i][j]);
+            }
+            msLeftoverButtons[i] = new JButton("Add leftover points");
+            msLeftoverButtons[i].addActionListener(e -> handleAddLeftover(planetIndex));
+            msLeftoverButtons[i].setVisible(false);
+            buttonPanel.add(msLeftoverButtons[i]);
+            rightPanel.add(buttonPanel);
+
+            // Custom points row below other buttons
+            msCustomPointsRows[i] = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+            msCustomPointsFields[i] = new JTextField(8);
+            msCustomPointsButtons[i] = new JButton("Add custom points");
+            msCustomPointsButtons[i].addActionListener(e -> handleAddCustomPoints(planetIndex));
+            msCustomPointsRows[i].add(new JLabel("Points (mil):"));
+            msCustomPointsRows[i].add(msCustomPointsFields[i]);
+            msCustomPointsRows[i].add(msCustomPointsButtons[i]);
+            msCustomPointsRows[i].setVisible(false);
+            rightPanel.add(msCustomPointsRows[i]);
+
+            msPlanetRows[i].add(labelPanel, BorderLayout.WEST);
+            msPlanetRows[i].add(rightPanel, BorderLayout.EAST);
+
+            planetsPanel.add(msPlanetRows[i]);
+            if (i < 4) {
+                msPlanetSeparators[i] = new JSeparator();
+                planetsPanel.add(msPlanetSeparators[i]);
+            }
+        }
+
+        mainPanel.add(planetsPanel, BorderLayout.CENTER);
+
+        // --- SOUTH: Controls ---
+        JPanel controlPanel = new JPanel();
+        controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
+
+        JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 5));
+        JButton undoButton = new JButton("Undo");
+        JButton resetButton = new JButton("Reset Phase");
+        msAdvanceButton = new JButton("Advance Phase");
+        msReviewButton = new JButton("Review Run");
+        msReviewButton.setVisible(false);
+
+        undoButton.addActionListener(e -> handleUndo());
+        resetButton.addActionListener(e -> handleResetPhase());
+        msAdvanceButton.addActionListener(e -> handleAdvancePhase());
+        msReviewButton.addActionListener(e -> handleReviewRun());
+
+        msStatusLabel = new JLabel(" ");
+        msStatusLabel.setHorizontalAlignment(JLabel.CENTER);
+        msStatusLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+        controlPanel.add(msStatusLabel);
+
+        buttonRow.add(undoButton);
+        buttonRow.add(resetButton);
+        buttonRow.add(msAdvanceButton);
+        buttonRow.add(msReviewButton);
+        controlPanel.add(buttonRow);
+
+        JPanel returnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 5));
+        JButton returnButton = new JButton("Return to data entry");
+        returnButton.addActionListener(e -> switchToDataEntryFromManualSim());
+        returnPanel.add(returnButton);
+        controlPanel.add(returnPanel);
+
+        mainPanel.add(controlPanel, BorderLayout.SOUTH);
+
+        // --- Review panel (second card) ---
+        JPanel reviewPanel = new JPanel(new BorderLayout(10, 10));
+        reviewPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+
+        JLabel reviewTitle = new JLabel("Run Summary");
+        reviewTitle.setFont(reviewTitle.getFont().deriveFont(18f));
+        reviewTitle.setHorizontalAlignment(JLabel.CENTER);
+        reviewPanel.add(reviewTitle, BorderLayout.NORTH);
+
+        msReviewTextPane = new JTextPane();
+        msReviewTextPane.setEditable(false);
+        msReviewTextPane.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.PLAIN, 13));
+        JScrollPane reviewScroll = new JScrollPane(msReviewTextPane);
+        reviewPanel.add(reviewScroll, BorderLayout.CENTER);
+
+        JPanel reviewButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton backToSimButton = new JButton("Back to simulation");
+        backToSimButton.addActionListener(e -> {
+            setMinimumSize(new Dimension(900, 550));
+            setPreferredSize(new Dimension(900, 550));
+            pack();
+            setLocationRelativeTo(null);
+            msCardLayout.show(msCardPanel, "simulation");
+        });
+        reviewButtonPanel.add(backToSimButton);
+        JButton reviewReturnButton = new JButton("Return to data entry");
+        reviewReturnButton.addActionListener(e -> switchToDataEntryFromManualSim());
+        reviewButtonPanel.add(reviewReturnButton);
+        reviewPanel.add(reviewButtonPanel, BorderLayout.SOUTH);
+
+        // --- Card layout to switch between simulation and review ---
+        msCardLayout = new CardLayout();
+        msCardPanel = new JPanel(msCardLayout);
+        msCardPanel.add(mainPanel, "simulation");
+        msCardPanel.add(reviewPanel, "review");
+
+        return msCardPanel;
+    }
+
+    private void handleCheckpoint(int checkpoint, int planetIndex) {
+        try {
+            double opsPoints = manualSim.attemptCheckpoint(checkpoint, planetIndex);
+            if (opsPoints > 0) {
+                msStatusLabel.setText("Operations triggered! " + opsPoints + " points added to the budget.");
+            } else {
+                msStatusLabel.setText(" ");
+            }
+        } catch (BudgetExceededException ex) {
+            msStatusLabel.setText(ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            msStatusLabel.setText(ex.getMessage());
+        }
+        refreshManualSimPanel();
+    }
+
+    private void handleUndo() {
+        try {
+            manualSim.undoAction();
+            msStatusLabel.setText(" ");
+        } catch (IndexOutOfBoundsException ex) {
+            msStatusLabel.setText(ex.getMessage());
+        }
+        refreshManualSimPanel();
+    }
+
+    private void handleResetPhase() {
+        manualSim.resetPhase();
+        msStatusLabel.setText(" ");
+        refreshManualSimPanel();
+    }
+
+    private void handleAddCustomPoints(int planetIndex) {
+        String input = msCustomPointsFields[planetIndex].getText();
+        if (input == null || input.isBlank()) {
+            msStatusLabel.setText("Please enter a points value.");
+            return;
+        }
+        try {
+            double points = Double.parseDouble(input);
+            double cost = manualSim.addCustomPoints(planetIndex, points);
+            msCustomPointsFields[planetIndex].setText("");
+            msStatusLabel.setText(String.format("Added points. Budget cost: %.2fM", cost));
+        } catch (NumberFormatException ex) {
+            msStatusLabel.setText("Invalid number format. Use dot as decimal separator.");
+        } catch (BudgetExceededException | IllegalArgumentException ex) {
+            msStatusLabel.setText(ex.getMessage());
+        }
+        refreshManualSimPanel();
+    }
+
+    private void handleAddLeftover(int planetIndex) {
+        try {
+            manualSim.addLeftoverPoints(planetIndex);
+            msStatusLabel.setText(" ");
+        } catch (IllegalArgumentException ex) {
+            msStatusLabel.setText(ex.getMessage());
+        }
+        refreshManualSimPanel();
+    }
+
+    private void handleAdvancePhase() {
+        manualSim.advancePhase();
+        msStatusLabel.setText(" ");
+        refreshManualSimPanel();
+    }
+
+    private void handleReviewRun() {
+        String summary = manualSim.getRunSummary();
+
+        msReviewTextPane.setText(summary);
+        StyledDocument doc = msReviewTextPane.getStyledDocument();
+        SimpleAttributeSet center = new SimpleAttributeSet();
+        StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
+        doc.setParagraphAttributes(0, doc.getLength(), center, false);
+        msReviewTextPane.setCaretPosition(0);
+
+        int availableWidth = getWidth()
+                - getInsets().left - getInsets().right - 30;
+        msReviewTextPane.setSize(availableWidth, Integer.MAX_VALUE);
+        int textHeight = msReviewTextPane.getPreferredSize().height;
+        int totalHeight = textHeight + 120;
+        int screenHeight = java.awt.Toolkit.getDefaultToolkit().getScreenSize().height;
+        totalHeight = Math.min(totalHeight, screenHeight - 50);
+        totalHeight = Math.max(totalHeight, 550);
+
+        setMinimumSize(new Dimension(900, totalHeight));
+        setPreferredSize(new Dimension(900, totalHeight));
+        pack();
+        setLocationRelativeTo(null);
+        msCardLayout.show(msCardPanel, "review");
+    }
+
+    private void refreshManualSimPanel() {
+        String[] state = manualSim.returnCurrentState();
+        String[] planetNames = manualSim.getActivePlanetNames();
+        int currentPhase = manualSim.getCurrentPhase();
+        int totalStars = manualSim.getTotalStars();
+
+        msPhaseLabel.setText("Phase: " + currentPhase + " of 6");
+        msStarLabel.setText("Total Stars: " + totalStars);
+        msBudgetLabel.setText(String.format("Budget: %.2fM", Double.parseDouble(state[10])));
+
+        double currentBudget = Double.parseDouble(state[10]);
+
+        for (int i = 0; i < 5; i++) {
+            if (planetNames[i] == null) {
+                msPlanetRows[i].setVisible(false);
+                msCustomPointsRows[i].setVisible(false);
+                continue;
+            }
+            String statusString = "";
+            switch (Integer.parseInt(state[i])) {
+                case -1 -> {
+                    statusString = "Below preload";
+                }
+                case 0 -> {
+                    statusString = "Fully preloaded";
+                }
+                case 1 -> {
+                    statusString = "1 Star";
+                }
+                case 2 -> {
+                    statusString = "2 Star";
+                }
+                case 3 -> {
+                    statusString = "3 Star";
+                }
+            }
+
+            msPlanetRows[i].setVisible(true);
+            msPlanetNameLabels[i].setText(planetNames[i]);
+            msPlanetStarLabels[i].setText(statusString);
+            msPlanetPointsLabels[i].setText(state[i + 5] != null ? state[i + 5] : "");
+
+            int[] reachable = manualSim.getReachableCheckpoints(i);
+            for (int j = 0; j < 4; j++) {
+                msCheckpointButtons[i][j].setVisible(reachable[j] == 1);
+            }
+            boolean belowPreload = state[i] != null && state[i].equals("-1");
+            boolean threeStarUnreachable = reachable[3] == 0;
+            msLeftoverButtons[i].setVisible(threeStarUnreachable && belowPreload && currentBudget > 0);
+            boolean canAbsorbMore = state[i] != null && !state[i].equals("3");
+            msCustomPointsRows[i].setVisible(canAbsorbMore && currentBudget > 0);
+        }
+
+        // Show separators only between visible planet rows
+        for (int i = 0; i < 4; i++) {
+            boolean currentVisible = planetNames[i] != null;
+            boolean anyNextVisible = false;
+            for (int k = i + 1; k < 5; k++) {
+                if (planetNames[k] != null) {
+                    anyNextVisible = true;
+                    break;
+                }
+            }
+            msPlanetSeparators[i].setVisible(currentVisible && anyNextVisible);
+        }
+
+        msAdvanceButton.setEnabled(currentPhase < 6);
+        msReviewButton.setVisible(currentPhase == 6 && state[11].equals("1"));
+
+        revalidate();
+        repaint();
+    }
+
+    private void toggleMissionPoints() {
+        this.addMissionPoints = !this.addMissionPoints;
     }
 
     public static void main(String[] args) {
