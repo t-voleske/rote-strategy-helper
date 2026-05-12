@@ -286,7 +286,7 @@ public class StrategyHelper extends JFrame {
         String[] depthLabels = {
                 "Mustafar, Corellia, Coruscant: ", "Geonosis, Felucia, Bracca: ", "Dathomir, Tatooine, Kashyyk: ",
                 "Haven, Kessel, Lothal: ", "Malachor, Vandor, Kafrene: ", "Death Star, Hoth, Scarif: ",
-                "Zeffo, Mandalore: "
+                "Mandalore, Zeffo: "
         };
 
         for (int i = 0; i < 7; i++) {
